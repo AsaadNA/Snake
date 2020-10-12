@@ -1,6 +1,7 @@
 import sys,pygame
 from pygame.locals import *
 from enum import Enum
+from random import randrange
 
 class Directions(Enum):
     up = 1
@@ -18,21 +19,34 @@ class Vector:
         return self.y
 
 class Snake:
-
     def __init__(self):
         self.currentDirection = None
         self.x = 800/2
         self.y = 600/2
-        self.xSpeed = 6
+        self.xSpeed = 10
         self.ySpeed = 0
         self.size = 15
         self.snakeCount = 0
         self.tail = []
+        self.score = 0        
+        self.foodX = 0
+        self.foodY = 0
 
+        self.spawnFood()
+
+    def spawnFood(self):
+        self.foodX = randrange(30,700)
+        self.foodY = randrange(30,500)
+        print("----------------")
+        print(self.foodX)
+        print(self.foodY)
+        print("-----------------")
+        
     def increase(self):
         for i in range(0,3):
             self.snakeCount += 1
             self.tail.append(Vector(self.x,self.y))
+        self.score += 10
 
     def setDirection(self,x,y):
         self.xSpeed = x
@@ -48,6 +62,7 @@ class Snake:
         self.y = 600/2
         self.xSpeed = 0 
         self.ySpeed = 0
+        self.score = 0
 
     def update(self):
 
@@ -71,12 +86,18 @@ class Snake:
         #Boundaries
         if self.x > 800 or self.x < 0 or self.y > 600 or self.y < 0:
             self.reset()
+        
+        #checks if snake head collides with the food
+        if self.x < self.foodX + self.size and self.x + self.size > self.foodX and self.y < self.foodY + self.size and self.y + self.size > self.foodY:
+            self.increase()
+            self.spawnFood()
     
     def render(self,window):
         pygame.draw.rect(window,(255,0,0),(self.x,self.y,self.size,self.size))
         for i in range(0,len(self.tail)-1):
             pygame.draw.rect(window,(255,255,255),(self.tail[i].getX(),self.tail[i].getY(),self.size,self.size))
-
+        if self.foodX != 0 and self.foodY != 0:
+            pygame.draw.rect(window,(0,255,0),(self.foodX,self.foodY,self.size,self.size))
 class Game:
 
     def __init__(self):
@@ -87,7 +108,7 @@ class Game:
         clock = pygame.time.Clock()
 
         self.currentDirection = None
-        self.snakeSpeed = 6
+        self.snakeSpeed = 10
         self.snake = Snake()
 
         while running == True:
@@ -95,7 +116,7 @@ class Game:
             for e in pygame.event.get():
                 if e.type == pygame.KEYDOWN:
                     if e.key == pygame.K_i:
-                        self.snake.increase()
+                        self.snake.spawnFood()
                     if e.key == pygame.K_UP:
                         if self.currentDirection != Directions.down or self.snake.getSnakeCount() == 0:
                             self.snake.setDirection(0,-self.snakeSpeed)
